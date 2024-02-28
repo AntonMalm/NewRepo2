@@ -1,0 +1,22 @@
+﻿@page "/CalcHistory"
+@rendermode InteractiveServer
+@using Shared
+@inject CalcHistoryService CalcHistoryService
+<h3>CalcHistory</h3>
+
+<Virtualize Items="CalcHistoryService.GetAllCalculations()">
+    <div class="card">
+        <div class="card-body">
+            <h1>@context.Expression</h1>
+        </div>
+        <div class="card-footer">
+            @context.Sum
+        </div>
+    </div>
+
+</Virtualize>
+
+
+@code {
+
+}

@@ -1,0 +1,121 @@
+﻿@page "/Calculator"
+@using Shared
+@rendermode InteractiveWebAssembly
+@inject CalcService CalcService
+@inject CalcHistoryService CalcHistoryService
+
+<h3>Calculator</h3>
+
+
+
+<EditForm FormName="Calculator" Model="NewCalculation" OnSubmit="SaveCalculation">
+    <DataAnnotationsValidator />
+    <h2>@NewCalculation.Expression</h2>
+    <h3>@Total</h3>
+    <button id="plus" @onclick="() => {NewCalculation.Expression+='+';}">+</button>
+    <button id="minus" @onclick="() => {NewCalculation.Expression+='-';}">-</button>
+    <button id="gånger" @onclick="() => {NewCalculation.Expression+='*';}">*</button>
+    <button id="delat" @onclick="() => {NewCalculation.Expression+='/';}">/</button>
+    <button type="submit">=</button>
+</EditForm>
+
+<p>
+    <Button Color="ButtonColor.Primary" @onclick="() => {NewCalculation.Expression+='0';}"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-0-square-fill" viewBox="0 0 16 16">
+        <path d="M8 4.951c-1.008 0-1.629 1.09-1.629 2.895v.31c0 1.81.627 2.895 1.629 2.895s1.623-1.09 1.623-2.895v-.31c0-1.8-.621-2.895-1.623-2.895"/>
+        <path d="M2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zm5.988 12.158c-1.851 0-2.941-1.57-2.941-3.99V7.84c0-2.408 1.101-3.996 2.965-3.996 1.857 0 2.935 1.57 2.935 3.996v.328c0 2.408-1.101 3.99-2.959 3.99"/>
+    </svg></Button>
+    <Button Color="ButtonColor.Primary" @onclick="() => {NewCalculation.Expression+='1';}">1</Button>
+    <Button Color="ButtonColor.Primary" @onclick="() => {NewCalculation.Expression+='2';}">2</Button>
+    <Button Color="ButtonColor.Primary" @onclick="() => {NewCalculation.Expression+='3';}">3</Button>
+    <Button Color="ButtonColor.Primary" @onclick="() => {NewCalculation.Expression+='4';}">4</Button>
+    <Button Color="ButtonColor.Primary" @onclick="() => {NewCalculation.Expression+='5';}">5</Button>
+    <Button Color="ButtonColor.Primary" @onclick="() => {NewCalculation.Expression+='6';}">6</Button>
+    <Button Color="ButtonColor.Primary" @onclick="() => {NewCalculation.Expression+='7';}">7</Button>
+    <Button Color="ButtonColor.Primary" @onclick="() => {NewCalculation.Expression+='8';}">8</Button>
+    <Button Color="ButtonColor.Primary" @onclick="() => {NewCalculation.Expression+='9';}">9</Button>
+</p>
+
+
+
+<Virtualize Items="CalcHistoryService.GetAllCalculations()">
+    <div class="card">
+        <div class="card-body">
+            <h1>@context.Expression</h1>
+        </div>
+        <div class="card-footer">
+            @context.Sum
+        </div>
+    </div>
+
+</Virtualize>
+
+@code {
+    public string[] SplitAt = new string[] { "+", "-", "*", "/" };
+
+    private Calculation NewCalculation { get; set; } = new Calculation();
+
+    public int Total { get; set; } = 0;
+
+
+    private void SaveCalculation()
+    {
+        foreach (var op in SplitAt)
+        {
+            string[] parts = NewCalculation.Expression.Split(new string[] { op }, StringSplitOptions.None);
+
+            if (parts.Length == 2)
+            {
+                string beforeOperator = parts[0].Trim();
+                string operatorText = op;
+                string afterOperator = parts[1].Trim();
+
+                if (!string.IsNullOrWhiteSpace(beforeOperator) && !string.IsNullOrWhiteSpace(afterOperator))
+                {
+                    if (int.TryParse(beforeOperator, out int beforeInt) && int.TryParse(afterOperator, out int afterInt))
+                    {
+                        switch (operatorText)
+                        {
+                            case "+":
+                                Total = CalcService.Addition(beforeOperator, afterOperator);
+                                CalcHistoryService.AddCalculation(NewCalculation);
+
+                                break;
+                            case "-":
+                                Total = CalcService.Subtraction(beforeOperator, afterOperator);
+                                CalcHistoryService.AddCalculation(NewCalculation);
+
+                                break;
+
+                            case "*":
+                                Total = CalcService.Multiplication(beforeOperator, afterOperator);
+                                CalcHistoryService.AddCalculation(NewCalculation);
+
+                                break;
+                            case "/":
+                                Total = CalcService.Division(beforeOperator, afterOperator);
+                                CalcHistoryService.AddCalculation(NewCalculation);
+
+                                break;
+                        }
+
+                        Console.WriteLine($"Before: {beforeOperator}, Operator: {operatorText}, After: {afterOperator}");
+                    }
+                    else
+                    {
+                        // Handle invalid integer strings
+                        Console.WriteLine("Invalid integer strings for addition or subtraction.");
+                    }
+                }
+                else
+                {
+                    // Handle empty or whitespace strings
+                    Console.WriteLine("Empty or whitespace strings detected.");
+                }
+            }
+
+        }
+
+    }
+
+}
+
